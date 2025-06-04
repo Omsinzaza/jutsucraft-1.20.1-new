@@ -31,8 +31,6 @@ public class WaterWalkingHandler {
     public record WaterChecks(boolean steadyCheck, boolean pushUpFast, boolean pushUpNormal) {
     }
 
-    private static final String COST_ACCUM_KEY = "WaterWalkCost";
-
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
@@ -43,7 +41,6 @@ public class WaterWalkingHandler {
         BlockPos feet = BlockPos.containing(player.getX(), player.getY() - 0.1D, player.getZ());
         if (!level.getFluidState(feet).is(FluidTags.WATER)) {
             player.getPersistentData().remove(SINK_KEY);
-            player.getPersistentData().remove(COST_ACCUM_KEY);
             return;
         }
 
@@ -69,30 +66,6 @@ public class WaterWalkingHandler {
             tag.remove(SINK_KEY);
         }
         WaterChecks checks = checkSteadyNormalFastPush(player);
-
-        double costAcc = tag.getDouble(COST_ACCUM_KEY);
-        float cost = 0f;
-        if (checks.pushUpFast()) {
-            cost += 1f;
-        } else if (checks.steadyCheck()) {
-            cost += 0.12f;
-        }
-        costAcc += cost;
-        int spend = (int) costAcc;
-        if (spend > 0) {
-            boolean[] success = {false};
-            player.getCapability(ChakraProvider.CHAKRA_CAPABILITY).ifPresent(chakra -> {
-                if (chakra.consumeChakra(spend)) {
-                    success[0] = true;
-                }
-            });
-            if (!success[0]) {
-                tag.putDouble(COST_ACCUM_KEY, 0D);
-                return;
-            }
-            costAcc -= spend;
-        }
-        tag.putDouble(COST_ACCUM_KEY, costAcc);
 
         updatePlayerMovement(player);
     }
