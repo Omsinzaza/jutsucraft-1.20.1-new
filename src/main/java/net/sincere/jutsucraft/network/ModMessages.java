@@ -30,6 +30,12 @@ public class ModMessages {
                 .encoder(ChakraSyncS2CPacket::toBytes)
                 .consumerMainThread(ChakraSyncS2CPacket::handle)
                 .add();
+
+        INSTANCE.messageBuilder(CycleJutsuC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(CycleJutsuC2SPacket::new)
+                .encoder(CycleJutsuC2SPacket::toBytes)
+                .consumerMainThread(CycleJutsuC2SPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToClient(MSG message, ServerPlayer player) {

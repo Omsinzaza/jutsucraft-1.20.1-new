@@ -4,11 +4,14 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.sincere.jutsucraft.Jutsucraft;
 import net.sincere.jutsucraft.client.ModKeyBindings;
 import net.sincere.jutsucraft.chakra.ChakraHUD;
+import net.sincere.jutsucraft.network.CycleJutsuC2SPacket;
+import net.sincere.jutsucraft.network.ModMessages;
 
 public class ClientEvents {
     @Mod.EventBusSubscriber(modid = Jutsucraft.MODID, value = Dist.CLIENT)
@@ -20,6 +23,14 @@ public class ClientEvents {
                 return;
             }
             ChakraHUD.renderChakraBar(event);
+        }
+
+        @SubscribeEvent
+        public static void onClientTick(TickEvent.ClientTickEvent event) {
+            if (event.phase != TickEvent.Phase.END) return;
+            while (ModKeyBindings.CHANGE_JUTSU.consumeClick()) {
+                ModMessages.INSTANCE.sendToServer(new CycleJutsuC2SPacket());
+            }
         }
     }
     @Mod.EventBusSubscriber(modid = Jutsucraft.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
