@@ -4,10 +4,10 @@ A Minecraft mod for Forge 1.20.1 introducing an example chakra system, sample bl
 
 ## Features
 
-- Example block and item registered under the `jutsucraft` namespace.
-- Sample creative mode tab showcasing mod items.
 - Basic chakra capability with automatic regeneration and synchronization.
 - Demonstrates configuration via `forge` config API.
+- Water walking ability lets players stand on water. Sneaking sinks into the 
+- water. Falling from great heights causes damage and forces the player to sink.
 
 ## Building
 
