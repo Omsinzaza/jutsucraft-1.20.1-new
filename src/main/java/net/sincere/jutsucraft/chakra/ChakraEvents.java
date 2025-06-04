@@ -49,7 +49,12 @@ public class ChakraEvents {
     public static void playerTick(TickEvent.PlayerTickEvent event) {
         if (!event.player.level().isClientSide && event.phase == TickEvent.Phase.END) {
             event.player.getCapability(ChakraProvider.CHAKRA_CAPABILITY).ifPresent(chakra -> {
+                int before = chakra.getChakra();
                 chakra.addChakra(1); // simple regen
+
+                if (before != chakra.getChakra() && event.player instanceof ServerPlayer serverPlayer) {
+                    ModMessages.sendToClient(new ChakraSyncS2CPacket(chakra.getChakra(), chakra.getMaxChakra()), serverPlayer);
+                }
             });
         }
     }
