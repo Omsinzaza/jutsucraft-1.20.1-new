@@ -18,10 +18,4 @@ public interface IChakra {
         }
         return false;
     }
-
-    /**
-     * Called every tick on the server side to update chakra state.
-     */
-    default void tick() {
-    }
 }

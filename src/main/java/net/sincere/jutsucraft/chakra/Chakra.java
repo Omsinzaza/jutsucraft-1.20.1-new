@@ -5,9 +5,6 @@ import net.minecraft.nbt.CompoundTag;
 public class Chakra implements IChakra {
     private int chakra = 0;
     private int maxChakra = 100;
-    private int regenInterval = 20; // ticks between regeneration
-    private int regenAmount = 1;
-    private int tickCounter = 0;
 
     @Override
     public int getChakra() {
@@ -40,13 +37,5 @@ public class Chakra implements IChakra {
     public void loadNBTData(CompoundTag nbt) {
         this.chakra = nbt.getInt("chakra");
         this.maxChakra = nbt.getInt("maxChakra");
-    }
-
-    @Override
-    public void tick() {
-        if (++tickCounter >= regenInterval) {
-            tickCounter = 0;
-            addChakra(regenAmount);
-        }
     }
 }
