@@ -5,7 +5,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
+import net.sincere.jutsucraft.chakra.ChakraProvider;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -22,6 +26,11 @@ public class WaterWalkingHandler {
     private static final String SINK_KEY = "WaterWalkSink";
     private static final int SINK_TICKS = 20;
 
+    public record WaterChecks(boolean steadyCheck, boolean pushUpFast, boolean pushUpNormal) {
+    }
+
+    private static final String COST_ACCUM_KEY = "WaterWalkCost";
+
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
@@ -32,6 +41,7 @@ public class WaterWalkingHandler {
         BlockPos feet = BlockPos.containing(player.getX(), player.getY() - 0.1D, player.getZ());
         if (!level.getFluidState(feet).is(FluidTags.WATER)) {
             player.getPersistentData().remove(SINK_KEY);
+            player.getPersistentData().remove(COST_ACCUM_KEY);
             return;
         }
 
@@ -56,11 +66,85 @@ public class WaterWalkingHandler {
         } else {
             tag.remove(SINK_KEY);
         }
+        WaterChecks checks = checkSteadyNormalFastPush(player);
 
-        Vec3 motion = player.getDeltaMovement();
-        if (motion.y < 0) {
-            player.setDeltaMovement(motion.x, 0, motion.z);
+        double costAcc = tag.getDouble(COST_ACCUM_KEY);
+        float cost = 0f;
+        if (checks.pushUpFast()) {
+            cost += 1f;
+        } else if (checks.steadyCheck()) {
+            cost += 0.12f;
         }
-        player.setOnGround(true);
+        costAcc += cost;
+        int spend = (int) costAcc;
+        if (spend > 0) {
+            boolean[] success = {false};
+            player.getCapability(ChakraProvider.CHAKRA_CAPABILITY).ifPresent(chakra -> {
+                if (chakra.consumeChakra(spend)) {
+                    success[0] = true;
+                }
+            });
+            if (!success[0]) {
+                tag.putDouble(COST_ACCUM_KEY, 0D);
+                return;
+            }
+            costAcc -= spend;
+        }
+        tag.putDouble(COST_ACCUM_KEY, costAcc);
+
+        updatePlayerMovement(player);
+    }
+
+    private static boolean triggerWaterWalk(Level level, BlockPos pos) {
+        FluidState fluid = level.getFluidState(pos);
+        BlockState block = level.getBlockState(pos);
+        return (fluid.is(Fluids.WATER) || fluid.is(Fluids.FLOWING_WATER)) && !block.blocksMotion();
+    }
+
+    private static WaterChecks checkSteadyNormalFastPush(Player player) {
+        int blockX = (int) Math.floor(player.getX());
+        int blockZ = (int) Math.floor(player.getZ());
+
+        int block1 = (int) Math.round(player.getY() - 0.56f);
+        boolean steady = triggerWaterWalk(player.level(), new BlockPos(blockX, block1, blockZ));
+
+        int block2 = (int) Math.round(player.getY());
+        int beforeBlock2 = (int) Math.round(player.yo);
+        boolean fast = triggerWaterWalk(player.level(), new BlockPos(blockX, block2, blockZ));
+        if (player.level().isClientSide() && player.yo > player.getY()) {
+            boolean beforeY = triggerWaterWalk(player.level(), new BlockPos(blockX, beforeBlock2, blockZ));
+            if (!beforeY && steady && player.yo - player.getY() < 0.9f) {
+                Vec3 vec = player.getDeltaMovement();
+                player.lerpMotion(vec.x(), 0, vec.z());
+                player.setPos(player.getX(), block2 + 0.05f, player.getZ());
+            } else {
+                steady = false;
+            }
+        }
+
+        int block3 = (int) Math.round(player.getY() - 0.47f);
+        boolean normal = triggerWaterWalk(player.level(), new BlockPos(blockX, block3, blockZ));
+
+        return new WaterChecks(steady, fast, normal);
+    }
+
+    private static void updatePlayerMovement(Player player) {
+        WaterChecks checks = checkSteadyNormalFastPush(player);
+        Vec3 vec = player.getDeltaMovement();
+        double y = vec.y();
+
+        if (checks.pushUpFast()) {
+            y = Math.min(y + 0.2D, 0.6D);
+        } else if (checks.pushUpNormal()) {
+            y = Math.min(y + 0.1D, 0.2D);
+        } else if (checks.steadyCheck() && y < 0.0D) {
+            y = 0.0D;
+            player.resetFallDistance();
+            player.setOnGround(true);
+            if (player.isFallFlying()) {
+                player.stopFallFlying();
+            }
+        }
+        player.lerpMotion(vec.x(), y, vec.z());
     }
 }
