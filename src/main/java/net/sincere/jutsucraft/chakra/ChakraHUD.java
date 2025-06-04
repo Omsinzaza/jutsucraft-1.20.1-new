@@ -26,18 +26,27 @@ public class ChakraHUD {
 
         mc.player.getCapability(ChakraProvider.CHAKRA_CAPABILITY).ifPresent(chakra -> {
             GuiGraphics graphics = event.getGuiGraphics();
+            int screenWidth = event.getWindow().getGuiScaledWidth();
             int screenHeight = event.getWindow().getGuiScaledHeight();
             int barWidth = 80;
             int barHeight = 5;
-            int x = 10;
-            int y = screenHeight - 49; // slightly above the hotbar
+
+            int hotbarLeft = (screenWidth - 182) / 2;
+            int x = hotbarLeft / 2 - barWidth / 2; // center between left border and hotbar
+
+            int hotbarTop = screenHeight - 23;
+            int previousY = hotbarTop - 15;
+            int y = previousY + (screenHeight - previousY - barHeight) / 2; // halfway to bottom
 
             graphics.fill(x, y, x + barWidth, y + barHeight, 0xAA000000);
-            int filled = (int) (barWidth * chakra.getChakra() / (float) chakra.getMaxChakra());
+            int innerWidth = barWidth - 2; // leave a 1px border on each side
+            int filled = (int) (innerWidth * chakra.getChakra() / (float) chakra.getMaxChakra());
             graphics.fill(x + 1, y + 1, x + 1 + filled, y + barHeight - 1, 0xFF0080FF);
 
+
             String text = chakra.getChakra() + " / " + chakra.getMaxChakra();
-            graphics.drawString(mc.font, text, x, y - 9, 0xFFFFFF, true);
+            int textX = x + (barWidth - mc.font.width(text)) / 2;
+            graphics.drawString(mc.font, text, textX, y - 9, 0xFFFFFF, true);
         });
     }
 }
