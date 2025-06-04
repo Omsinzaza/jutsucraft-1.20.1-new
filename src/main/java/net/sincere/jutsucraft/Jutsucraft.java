@@ -23,6 +23,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
+import net.sincere.jutsucraft.chakra.ChakraProvider;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -102,6 +104,14 @@ public class Jutsucraft {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+    }
+
+    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ModEvents {
+        @SubscribeEvent
+        public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+            ChakraProvider.register(event);
+        }
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
