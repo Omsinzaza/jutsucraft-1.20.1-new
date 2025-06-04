@@ -1,0 +1,6 @@
+{
+  "parent": "jutsucraft:custom/katon",
+  "textures": {
+    "0": "jutsucraft:blocks/katon"
+  }
+}

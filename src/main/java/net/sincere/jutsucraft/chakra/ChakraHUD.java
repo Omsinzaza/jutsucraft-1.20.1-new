@@ -2,20 +2,11 @@ package net.sincere.jutsucraft.chakra;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.sincere.jutsucraft.Jutsucraft;
 
-/**
- * Simple chakra bar HUD rendered above the hotbar.
- */
-@Mod.EventBusSubscriber(modid = Jutsucraft.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ChakraHUD {
 
-    @SubscribeEvent
     public static void renderChakraBar(RenderGuiOverlayEvent.Post event) {
         if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type()) {
             return;
