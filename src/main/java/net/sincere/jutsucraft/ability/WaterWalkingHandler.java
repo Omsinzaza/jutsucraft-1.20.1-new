@@ -25,6 +25,8 @@ public class WaterWalkingHandler {
     private static final float FALL_THRESHOLD = 3.0F;
     private static final String SINK_KEY = "WaterWalkSink";
     private static final int SINK_TICKS = 20;
+    private static final double VELOCITY_CHECK_DIST = 0.3D;
+
 
     public record WaterChecks(boolean steadyCheck, boolean pushUpFast, boolean pushUpNormal) {
     }
@@ -127,6 +129,13 @@ public class WaterWalkingHandler {
 
         return new WaterChecks(steady, fast, normal);
     }
+    private static boolean isNearWaterSurface(Player player) {
+        Level level = player.level();
+        BlockPos below = BlockPos.containing(player.getX(), player.getY() - VELOCITY_CHECK_DIST, player.getZ());
+        BlockPos at = BlockPos.containing(player.getX(), Math.ceil(player.getY()), player.getZ());
+        return level.getFluidState(below).is(FluidTags.WATER) && !level.getFluidState(at).is(FluidTags.WATER);
+    }
+
 
     private static void updatePlayerMovement(Player player) {
         WaterChecks checks = checkSteadyNormalFastPush(player);
@@ -144,6 +153,9 @@ public class WaterWalkingHandler {
             if (player.isFallFlying()) {
                 player.stopFallFlying();
             }
+        }
+        if (isNearWaterSurface(player) && y < 0.0D) {
+            y = 0.0D;
         }
         player.lerpMotion(vec.x(), y, vec.z());
     }
